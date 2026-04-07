@@ -1,0 +1,13 @@
+# Binaries
+birthday_bot
+
+# Logs
+*.log
+
+# Environment
+.env
+
+# System
+.DS_Store
+.gemini/
+.geminiignore
