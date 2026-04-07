@@ -55,4 +55,4 @@ fi
 # 2. Запускаем бота
 # Мы заходим в директорию скрипта, чтобы логи писались рядом
 cd "$(dirname "$0")"
-sudo -u postgres BOT_TOKEN="$TOKEN" CHAT_ID="$ID" MESSAGE_THREAD_ID="$THREAD" ./birthday_bot
+sudo -u postgres BOT_TOKEN="$TOKEN" CHAT_ID="$ID" MESSAGE_THREAD_ID="$THREAD" ./birthday_bot "$@"

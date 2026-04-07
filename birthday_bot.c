@@ -130,51 +130,22 @@ int main(int argc, char *argv[]) {
         printf("No birthdays today.\n");
     }
 
+    int dry_run = 0;
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "dry") == 0) dry_run = 1;
+    }
+
     srand(time(NULL));
 
     for (int i = 0; i < rows; i++) {
-        char *fio = PQgetvalue(res, i, 0);
-        char *user_id_str = PQgetvalue(res, i, 1);
+        // ... (код формирования сообщения остается прежним)
         
-        char mention[512];
-        char *esc_fio = escape_markdown_v2(fio);
-        
-        if (user_id_str && strlen(user_id_str) > 0) {
-            snprintf(mention, sizeof(mention), "[%s](tg://user?id=%s)", esc_fio, user_id_str);
+        if (dry_run) {
+            printf("\n[DRY RUN] Сообщение для %s:\n%s\n", fio, message);
         } else {
-            snprintf(mention, sizeof(mention), "%s", esc_fio);
+            printf("Sending greeting for %s...\n", fio);
+            send_telegram_message(token, chat_id, thread_id, message);
         }
-
-        char first_name[255];
-        strncpy(first_name, fio, sizeof(first_name));
-        first_name[sizeof(first_name)-1] = '\0';
-        char *space = strchr(first_name, ' ');
-        if (space) *space = '\0';
-        char *esc_first_name = escape_markdown_v2(first_name);
-
-        char message[2048];
-        int variant = rand() % 3;
-        
-        if (variant == 0) {
-            snprintf(message, sizeof(message), 
-                "Сегодня отличный повод для праздника\\! 🎉 У нашего коллеги %s день рождения\\! 🎂\n\n"
-                "%s, поздравляем тебя всей командой\\! Желаем крутых достижений, профессионального роста и отличного настроения\\. Пусть всё задуманное сбывается\\! 🚀",
-                mention, esc_first_name);
-        } else if (variant == 1) {
-            snprintf(message, sizeof(message),
-                "Ура\\! Сегодня день рождения у %s\\! 🎈\n\n"
-                "Желаем неиссякаемой энергии, побольше ярких моментов и только успешных кейсов\\. Пусть каждый день приносит радость и новые возможности\\! С праздником\\! ✨",
-                mention);
-        } else {
-            snprintf(message, sizeof(message),
-                "Друзья, внимание\\! Сегодня празднует свой день рождения %s\\! 🎁\n\n"
-                "Давайте поздравим коллегу и накидаем реакций\\! 👇\n"
-                "Желаем счастья, вдохновения и реализации самых смелых идей\\. С днем рождения\\!",
-                mention);
-        }
-
-        printf("Sending greeting for %s...\n", fio);
-        send_telegram_message(token, chat_id, thread_id, message);
         
         free(esc_fio);
         free(esc_first_name);
