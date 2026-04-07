@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
                         "WHERE is_deleted = false AND is_blocked = false "
                         "AND TO_CHAR(birth_date, 'MM-DD') = TO_CHAR(CURRENT_DATE, 'MM-DD')";
     
-    if (argc > 1 && strcmp(argv[1], "test") == 0) {
+    if (argc > 1 && (strcmp(argv[1], "test") == 0 || (argc > 2 && strcmp(argv[2], "test") == 0))) {
         query = "SELECT fio, user_id FROM employees WHERE is_deleted = false AND is_blocked = false AND birth_date IS NOT NULL LIMIT 1";
         printf("Running in TEST mode...\n");
     }
@@ -138,8 +138,46 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));
 
     for (int i = 0; i < rows; i++) {
-        // ... (код формирования сообщения остается прежним)
+        char *fio = PQgetvalue(res, i, 0);
+        char *user_id_str = PQgetvalue(res, i, 1);
         
+        char mention[512];
+        char *esc_fio = escape_markdown_v2(fio);
+        
+        if (user_id_str && strlen(user_id_str) > 0) {
+            snprintf(mention, sizeof(mention), "[%s](tg://user?id=%s)", esc_fio, user_id_str);
+        } else {
+            snprintf(mention, sizeof(mention), "%s", esc_fio);
+        }
+
+        char first_name[255];
+        strncpy(first_name, fio, sizeof(first_name));
+        first_name[sizeof(first_name)-1] = '\0';
+        char *space = strchr(first_name, ' ');
+        if (space) *space = '\0';
+        char *esc_first_name = escape_markdown_v2(first_name);
+
+        char message[2048];
+        int variant = rand() % 3;
+        
+        if (variant == 0) {
+            snprintf(message, sizeof(message), 
+                "Сегодня отличный повод для праздника\\! 🎉 У нашего коллеги %s день рождения\\! 🎂\n\n"
+                "%s, поздравляем тебя всей командой\\! Желаем крутых достижений, профессионального роста и отличного настроения\\. Пусть всё задуманное сбывается\\! 🚀",
+                mention, esc_first_name);
+        } else if (variant == 1) {
+            snprintf(message, sizeof(message),
+                "Ура\\! Сегодня день рождения у %s\\! 🎈\n\n"
+                "Желаем неиссякаемой энергии, побольше ярких моментов и только успешных кейсов\\. Пусть каждый день приносит радость и новые возможности\\! С праздником\\! ✨",
+                mention);
+        } else {
+            snprintf(message, sizeof(message),
+                "Друзья, внимание\\! Сегодня празднует свой день рождения %s\\! 🎁\n\n"
+                "Давайте поздравим коллегу и накидаем реакций\\! 👇\n"
+                "Желаем счастья, вдохновения и реализации самых смелых идей\\. С днем рождения\\!",
+                mention);
+        }
+
         if (dry_run) {
             printf("\n[DRY RUN] Сообщение для %s:\n%s\n", fio, message);
         } else {
