@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Переход в директорию скрипта
+cd "$(dirname "$0")"
+
+# Загрузка переменных из .env, если он существует
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
+
 # Параметры из окружения
 TOKEN=${BOT_TOKEN}
 ID=${CHAT_ID}
